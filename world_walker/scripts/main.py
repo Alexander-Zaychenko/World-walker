@@ -3,6 +3,12 @@ import random
 
 
 def main():
+    # create variables
+    current_frame = 1
+    buffing = False
+    start_frame_buffing = -250
+    ten_secs_in_frames = 250
+    speed_buff_rate = 3
 
     # initialize game
     pygame.init()
@@ -18,7 +24,8 @@ def main():
     # define colors
     colors = {
         "snake_head": (0, 255, 0),
-        'apple': (255, 0, 0)
+        'apple': (255, 0, 0),
+        'speed_buff': (128, 166, 255)
     }
 
     # snake position with offsets
@@ -44,6 +51,14 @@ def main():
     food_size = (10, 10)
     food_eaten = 0
 
+    # speed buffer
+    speed_buff_pos = {
+        "x": round(random.randrange(0, width - player_size[0]) / 10) * 10,
+        "y": round(random.randrange(0, height - player_size[1]) / 10) * 10,
+    }
+
+    speed_buff_size = (10, 10)
+
     # start loop
     game_end = False
     clock = pygame.time.Clock()
@@ -57,22 +72,22 @@ def main():
                 game_end = True
 
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and player_pos["x_change"] == 0:
+                if event.key == pygame.K_LEFT or event.key == ord('a'):
                     # move left
                     player_pos["x_change"] = -player_speed
                     player_pos["y_change"] = 0
 
-                elif (event.key == pygame.K_RIGHT or event.key == ord('d')) and player_pos["x_change"] == 0:
+                elif event.key == pygame.K_RIGHT or event.key == ord('d'):
                     # move right
                     player_pos["x_change"] = player_speed
                     player_pos["y_change"] = 0
 
-                elif event.key == pygame.K_UP and player_pos["y_change"] == 0:
+                elif event.key == pygame.K_UP or event.key == ord('w'):
                     # move up
                     player_pos["x_change"] = 0
                     player_pos["y_change"] = -player_speed
 
-                elif event.key == pygame.K_DOWN and player_pos["y_change"] == 0:
+                elif event.key == pygame.K_DOWN or event.key == ord('s'):
                     # move down
                     player_pos["x_change"] = 0
                     player_pos["y_change"] = player_speed
@@ -110,6 +125,13 @@ def main():
             food_size[0],
             food_size[1]])
 
+        # draw speed buff
+        pygame.draw.rect(display, colors['speed_buff'], [
+            speed_buff_pos["x"],
+            speed_buff_pos["y"],
+            speed_buff_size[0],
+            speed_buff_size[1]])
+
         # detect collision with food
         if (abs(player_pos["x"] - food_pos["x"]) < 10) and (abs(player_pos["y"] - food_pos["y"]) < 10):
             food_eaten += 1
@@ -119,10 +141,26 @@ def main():
                 "y": round(random.randrange(0, height - player_size[1]) / 10) * 10,
             }
 
+        # detect collision with speed buff and buff player, if required
+        if (abs(player_pos["x"] - speed_buff_pos["x"]) < 10) and (abs(player_pos["y"] - speed_buff_pos["y"]) < 10):
+            speed_buff_pos = {
+                "x": round(random.randrange(0, width - player_size[0]) / 10) * 10,
+                "y": round(random.randrange(0, height - player_size[1]) / 10) * 10,
+            }
+
+            if not buffing:
+                buffing = True
+                start_frame_buffing = current_frame
+                player_speed *= speed_buff_rate
+        if buffing and current_frame - start_frame_buffing > ten_secs_in_frames:
+            player_speed /= speed_buff_rate
+            buffing = False
+
         pygame.display.update()
 
         # set FPS
-        clock.tick(30)
+        clock.tick(25)
+        current_frame += 1
 
     # close app, if required
     pygame.quit()
