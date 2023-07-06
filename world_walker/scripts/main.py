@@ -33,9 +33,7 @@ def main():
     player_size = (10, 10)
 
     # current player movement speed
-    player_speed = 10
-
-    player_pos["x_change"] = -player_speed
+    player_speed = 2
 
     # food
     food_pos = {
@@ -53,6 +51,8 @@ def main():
     while not game_end:
         # game loop
         for event in pygame.event.get():
+            player_pos["x_change"] = 0
+            player_pos["y_change"] = 0
             if event.type == pygame.QUIT:
                 game_end = True
 
@@ -62,7 +62,7 @@ def main():
                     player_pos["x_change"] = -player_speed
                     player_pos["y_change"] = 0
 
-                elif event.key == pygame.K_RIGHT and player_pos["x_change"] == 0:
+                elif (event.key == pygame.K_RIGHT or event.key == ord('d')) and player_pos["x_change"] == 0:
                     # move right
                     player_pos["x_change"] = player_speed
                     player_pos["y_change"] = 0
@@ -79,7 +79,6 @@ def main():
 
         # clear screen
         display.fill((0, 0, 0))
-
 
         # draw snake
         player_pos["x"] += player_pos["x_change"]
@@ -112,8 +111,7 @@ def main():
             food_size[1]])
 
         # detect collision with food
-        if (player_pos["x"] == food_pos["x"]
-                and player_pos["y"] == food_pos["y"]):
+        if (abs(player_pos["x"] - food_pos["x"]) < 10) and (abs(player_pos["y"] - food_pos["y"]) < 10):
             food_eaten += 1
 
             food_pos = {
@@ -129,4 +127,3 @@ def main():
     # close app, if required
     pygame.quit()
     quit()
-
