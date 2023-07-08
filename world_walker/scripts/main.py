@@ -2,6 +2,14 @@ import pygame
 import random
 
 
+def paragraph():
+    print()
+    print()
+    print()
+    print()
+    print()
+
+
 def change_pos_ent(x, y):
     new_ent_pos = {
         "x": round(random.randrange(0, x - 10) / 10) * 10,
@@ -10,17 +18,17 @@ def change_pos_ent(x, y):
     return new_ent_pos
 
 
-def add_ent(display, color, player_pos, player_size):
+def add_ent(display, color, ent_pos, ent_size):
     pygame.draw.rect(display, color, [
-        player_pos["x"],
-        player_pos["y"],
-        player_size[0],
-        player_size[1]])
+        ent_pos["x"],
+        ent_pos["y"],
+        ent_size[0],
+        ent_size[1]])
 
 
-def check_collision(player_x, player_y, second_x, second_y, player_size):
-    x_collision = (abs(player_x - second_x) < player_size[0])
-    y_collision = (abs(player_y - second_y) < player_size[1])
+def check_collision(player_pos, ent_pos, ent_size):
+    x_collision = (abs(player_pos['x'] - ent_pos['x']) < ent_size[0])
+    y_collision = (abs(player_pos['y'] - ent_pos['y']) < ent_size[1])
     return x_collision and y_collision
 
 
@@ -39,6 +47,9 @@ def main():
     ten_secs_in_frames = fps * 10
     speed_buff_rate = 3
     size_mine_rate = 2
+    food_collision = False
+    reproduction = 2
+
 
     # initialize game
     pygame.init()
@@ -51,6 +62,9 @@ def main():
 
     pygame.display.update()
     pygame.display.set_caption("World walker BETA")
+
+    # make paragraph
+    paragraph()
 
     # define colors
     colors = {
@@ -77,19 +91,19 @@ def main():
     player_speed = 2
 
     # food
-    food_pos = change_pos_ent(width, height)
+    food_positions = [change_pos_ent(width, height)]
     food_size = (10, 10)
-    food_eaten = 0
+    score = 0
 
     # speed buffer
     speed_buff_pos = change_pos_ent(width, height)
     speed_buff_size = (10, 10)
 
     # mine
-    mine_pos = change_pos_ent(width, height)
+    mine_positions = [change_pos_ent(width, height)]
     mine_size = (20, 20)
 
-    # size mine
+    # size-mine
     size_mine_pos = change_pos_ent(width, height)
     size_mine_size = (10, 10)
 
@@ -150,27 +164,46 @@ def main():
         add_ent(display, colors['player'], player_pos, player_size)
 
         # draw food
-        add_ent(display, colors['food'], food_pos, food_size)
+        for food_pos in food_positions:
+            add_ent(display, colors['food'], food_pos, food_size)
 
         # draw speed buff
         add_ent(display, colors['speed buff'], speed_buff_pos, speed_buff_size)
 
         # draw mine
-        add_ent(display, colors['mine'], mine_pos, mine_size)
+        for mine_pos in mine_positions:
+            add_ent(display, colors['mine'], mine_pos, mine_size)
 
         # draw size mine
         add_ent(display, colors['size mine'], size_mine_pos, size_mine_size)
 
         # detect collision with food
-        if check_collision(player_pos['x'], player_pos['y'], food_pos['x'], food_pos['y'], player_size):
-            food_eaten += 1
+        new_food_positions = []
+        new_mine_positions = []
+        for food_pos in food_positions:
+            if check_collision(player_pos, food_pos, player_size):
+                score += 1
+                print(f"Очков: {score}")
+                food_collision = True
 
-            food_pos = change_pos_ent(width, height)
+                # add 2 new apples
+                for i in range(reproduction + 1):
+                    new_food_positions.append(change_pos_ent(width, height))
 
-            print(f"Очков: {food_eaten}")
+                # add 2 new mines
+                for j in range(reproduction + score):
+                    new_mine_positions.append(change_pos_ent(width, height))
+
+            else:
+                new_food_positions.append(food_pos)
+
+        if food_collision:
+            food_positions = new_food_positions
+            mine_positions = new_mine_positions
+            food_collision = not food_collision
 
         # detect collision with speed buff
-        if check_collision(player_pos['x'], player_pos['y'], speed_buff_pos['x'], speed_buff_pos['y'], player_size):
+        if check_collision(player_pos, speed_buff_pos, player_size):
             if not buffing_speed:
                 buffing_speed = True
                 start_frame_buffing_speed = current_frame
@@ -183,13 +216,21 @@ def main():
             buffing_speed = False
 
         # detect collision with mine
-        if check_collision(player_pos['x'], player_pos['y'], mine_pos['x'], mine_pos['y'], player_size):
-            print('Очки сброшены!')
-            food_eaten = 0
-            mine_pos = change_pos_ent(width, height)
+        new_mine_positions = []
+        for mine_pos in mine_positions:
+            if check_collision(player_pos, mine_pos, mine_size):
+                print('Вы наступили на мину! Штраф 10 очков!')
+                score -= 10
+                if score < 0:
+                    quit()
+                new_mine_positions.append(change_pos_ent(width, height))
+            else:
+                new_mine_positions.append(mine_pos)
+        mine_positions = new_mine_positions
+
 
         # detect collision with size mine
-        if check_collision(player_pos['x'], player_pos['y'], size_mine_pos['x'], size_mine_pos['y'], player_size):
+        if check_collision(player_pos, size_mine_pos, size_mine_size):
             if not buffing_size:
                 buffing_size = True
                 start_frame_buffing_size = current_frame
