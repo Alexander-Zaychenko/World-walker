@@ -24,8 +24,8 @@ def check_collision(player_x, player_y, second_x, second_y, player_size):
     return x_collision and y_collision
 
 
-def change_size(size):
-    return list(map(lambda x: x * 2, size))
+def change_size(size, rate):
+    return list(map(lambda x: x * rate, size))
 
 
 def main():
@@ -38,6 +38,7 @@ def main():
     start_frame_buffing_size = -250
     ten_secs_in_frames = fps * 10
     speed_buff_rate = 3
+    size_mine_rate = 2
 
     # initialize game
     pygame.init()
@@ -192,7 +193,7 @@ def main():
             if not buffing_size:
                 buffing_size = True
                 start_frame_buffing_size = current_frame
-                player_size = change_size(player_size)
+                player_size = change_size(player_size, size_mine_rate)
 
                 size_mine_pos = change_pos_ent(width, height)
 
