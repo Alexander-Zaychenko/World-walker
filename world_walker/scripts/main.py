@@ -24,12 +24,18 @@ def check_collision(player_x, player_y, second_x, second_y, player_size):
     return x_collision and y_collision
 
 
+def change_size(size):
+    return list(map(lambda x: x * 2, size))
+
+
 def main():
     # create variables
     fps = 25
     current_frame = 1
-    buffing = False
-    start_frame_buffing = -250
+    buffing_speed = False
+    buffing_size = False
+    start_frame_buffing_speed = -250
+    start_frame_buffing_size = -250
     ten_secs_in_frames = fps * 10
     speed_buff_rate = 3
 
@@ -49,8 +55,9 @@ def main():
     colors = {
         "player": (0, 255, 0),
         'food': (255, 0, 0),
-        'speed_buff': (128, 166, 255),
-        'mine': (255, 255, 0)
+        'speed buff': (128, 166, 255),
+        'mine': (255, 255, 0),
+        'size mine': (255, 20, 147)
     }
 
     # snake position with offsets
@@ -62,23 +69,28 @@ def main():
     }
 
     # player size
-    player_size = (10, 10)
+    player_size = [10, 10]
+    player_size_normally = [10, 10]
 
     # current player movement speed
     player_speed = 2
 
     # food
     food_pos = change_pos_ent(width, height)
-
     food_size = (10, 10)
     food_eaten = 0
 
     # speed buffer
     speed_buff_pos = change_pos_ent(width, height)
+    speed_buff_size = (10, 10)
 
     # mine
     mine_pos = change_pos_ent(width, height)
-    speed_buff_size = (10, 10)
+    mine_size = (20, 20)
+
+    # size mine
+    size_mine_pos = change_pos_ent(width, height)
+    size_mine_size = (10, 10)
 
     # start loop
     game_end = False
@@ -137,13 +149,16 @@ def main():
         add_ent(display, colors['player'], player_pos, player_size)
 
         # draw food
-        add_ent(display, colors['food'], food_pos, player_size)
+        add_ent(display, colors['food'], food_pos, food_size)
 
         # draw speed buff
-        add_ent(display, colors['speed_buff'], speed_buff_pos, player_size)
+        add_ent(display, colors['speed buff'], speed_buff_pos, speed_buff_size)
 
         # draw mine
-        add_ent(display, colors['mine'], mine_pos, player_size)
+        add_ent(display, colors['mine'], mine_pos, mine_size)
+
+        # draw size mine
+        add_ent(display, colors['size mine'], size_mine_pos, size_mine_size)
 
         # detect collision with food
         if check_collision(player_pos['x'], player_pos['y'], food_pos['x'], food_pos['y'], player_size):
@@ -155,16 +170,16 @@ def main():
 
         # detect collision with speed buff
         if check_collision(player_pos['x'], player_pos['y'], speed_buff_pos['x'], speed_buff_pos['y'], player_size):
-            if not buffing:
-                buffing = True
-                start_frame_buffing = current_frame
+            if not buffing_speed:
+                buffing_speed = True
+                start_frame_buffing_speed = current_frame
                 player_speed *= speed_buff_rate
 
                 speed_buff_pos = change_pos_ent(width, height)
 
-        if buffing and current_frame - start_frame_buffing > ten_secs_in_frames:
+        if buffing_speed and current_frame - start_frame_buffing_speed > ten_secs_in_frames:
             player_speed /= speed_buff_rate
-            buffing = False
+            buffing_speed = False
 
         # detect collision with mine
         if check_collision(player_pos['x'], player_pos['y'], mine_pos['x'], mine_pos['y'], player_size):
@@ -172,6 +187,20 @@ def main():
             food_eaten = 0
             mine_pos = change_pos_ent(width, height)
 
+        # detect collision with size mine
+        if check_collision(player_pos['x'], player_pos['y'], size_mine_pos['x'], size_mine_pos['y'], player_size):
+            if not buffing_size:
+                buffing_size = True
+                start_frame_buffing_size = current_frame
+                player_size = change_size(player_size)
+
+                size_mine_pos = change_pos_ent(width, height)
+
+        if buffing_size and current_frame - start_frame_buffing_size > ten_secs_in_frames:
+            buffing_size = False
+            player_size = player_size_normally
+
+        # next frame
         pygame.display.update()
 
         # set FPS
