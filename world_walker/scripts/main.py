@@ -38,6 +38,7 @@ def change_size(size, rate):
 
 def main():
     # create variables
+    app_name = "World walker"
     fps = 25
     current_frame = 1
     buffing_speed = False
@@ -50,18 +51,18 @@ def main():
     food_collision = False
     reproduction = 2
 
-
     # initialize game
     pygame.init()
 
     # create display & run update
-    width = 1080
-    height = 720
+    width = 1920
+    height = 1025
 
     display = pygame.display.set_mode((width, height))
 
     pygame.display.update()
-    pygame.display.set_caption("World walker BETA")
+    pygame.display.set_caption(app_name)
+    print(current_frame)
 
     # make paragraph
     paragraph()
